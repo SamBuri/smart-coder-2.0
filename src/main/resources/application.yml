@@ -1,0 +1,5 @@
+server:
+    port: ${PORT:9797}
+spring:
+    application:
+        name: smart-corder
