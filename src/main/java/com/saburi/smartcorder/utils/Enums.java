@@ -24,7 +24,7 @@ public class Enums {
         MultiSelectCombo, ImageView, TableView, FileBrowser, SNumberInput, SelectField
     }
 
-    public static enum RelationMappping {
+    public static enum RelationMapping {
         OneToOne, OneToMany, ManyToOne, ManyToMany
     };
 
@@ -48,7 +48,7 @@ public class Enums {
         Springboot_API, Vue, Desktop
     };
 
-    public enum WebFiles {
+    public enum SpringBootFiles {
         All, Entity, Repo, Service, Controller, Request, Mini, Change_Log, ServiceTest, ControllerTest //, SecurityConfig
     };
     

@@ -1,5 +1,34 @@
 server:
     port: ${PORT:9797}
+
+db:
+    host: ${DB_HOST:localhost}
+    name: ${DB_NAME:smartcoder}
+    port: ${DB_PORT:3306}
+    driver: ${DB_DRIVER:jdbc:mysql}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:pass}
+
 spring:
     application:
-        name: smart-corder
+        name: smart-coder
+    cloud:
+        kubernetes:
+            enabled: false
+    jpa:
+        show-sql: true
+        properties:
+            hibernate:
+                format-sql: true
+    datasource:
+        url: ${db.driver}://${db.host}:${db.port}/${db.name}
+        username: ${db.username}
+        password: ${db.password}
+        type: com.zaxxer.hikari.HikariDataSource
+        hikari:
+            pool-name: ev-pool
+            maximum-pool-size: 5
+            max-lifetime: 1800000
+            dle-timeout: 30000
+    liquibase:
+        change-log: classpath:/changelogs/changelog-master.xml

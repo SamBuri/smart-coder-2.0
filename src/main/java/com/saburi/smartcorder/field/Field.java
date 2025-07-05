@@ -5,12 +5,19 @@
  */
 package com.saburi.smartcorder.field;
 
+import com.saburi.smartcorder.utils.Enums;
 import com.saburi.smartcorder.utils.Utilities;
+import lombok.Builder;
+import lombok.Data;
+
+import java.util.Objects;
 
 /**
  *
- * @author ClinicMaster13
+ * @author Sam Buriima
  */
+@Data
+@Builder
 public class Field {
 
     private String fieldName = "";
@@ -20,449 +27,28 @@ public class Field {
     private String mapping = "";
     private String key = "";
     private String saburiKey = "";
+    @Builder.Default
     private int size = 100;
+    @Builder.Default
     private boolean nullable = false;
+    @Builder.Default
     private boolean enumerated = false;
+    @Builder.Default
     private String subFields = "";
     private String projectName = "";
+    @Builder.Default
     private boolean expose = false;
     private String moduleName ="";
+    @Builder.Default
     private boolean select = false;
 
-    private String variableName;
-    private String referencesID;
-    private String display;
-    private String referencesVariableID;
-    private String displayVariableName;
-    private final String displayDataType = "String";
+//    private String variableName;
+//    private String referencesID;
+//    private String display;
+//    private String referencesVariableID;
+//    private String displayVariableName;
+//    private final String displayDataType = "String";
 
-    public Field() {
-    }
-
-    public Field(String fieldName, String caption, String dataType) {
-        this.fieldName = fieldName;
-        this.caption = caption;
-        this.dataType = dataType;
-        this.enumerated = false;
-        this.nullable = true;
-        this.variableName = Utilities.getVariableName(fieldName);
-        this.referencesID = this.fieldName.concat("ID");
-        this.display = this.fieldName.concat("Display");
-        this.referencesVariableID = Utilities.getVariableName(referencesID);
-        this.displayVariableName = Utilities.getVariableName(display);
-
-    }
-
-    public Field(String fieldName, String caption, String dataType, String references) {
-        this.fieldName = fieldName;
-        this.caption = caption;
-        this.dataType = dataType;
-        this.references = references;
-        this.variableName = Utilities.getVariableName(fieldName);
-        this.enumerated = false;
-        this.nullable = true;
-        this.referencesID = this.fieldName.concat("ID");
-        this.display = this.fieldName.concat("Display");
-        this.referencesVariableID = Utilities.getVariableName(referencesID);
-        this.displayVariableName = Utilities.getVariableName(display);
-
-    }
-
-    public Field(String fieldName, String caption, String dataType, String references, String subFields) {
-        this.fieldName = fieldName;
-        this.caption = caption;
-        this.dataType = dataType;
-        this.subFields = subFields;
-        this.references = references;
-        this.enumerated = false;
-        this.nullable = true;
-        this.variableName = Utilities.getVariableName(fieldName);
-        this.referencesID = this.fieldName.concat("ID");
-        this.display = this.fieldName.concat("Display");
-        this.referencesVariableID = Utilities.getVariableName(referencesID);
-        this.displayVariableName = Utilities.getVariableName(display);
-
-    }
-
-    public Field(String fieldName, String caption, String dataType, String references, String subFields,
-            String mapping) {
-        this.fieldName = fieldName;
-        this.caption = caption;
-        this.dataType = dataType;
-        this.references = references;
-        this.subFields = subFields;
-        this.mapping = mapping;
-        this.enumerated = false;
-        this.nullable = true;
-        this.variableName = Utilities.getVariableName(fieldName);
-        this.referencesID = this.fieldName.concat("ID");
-        this.display = this.fieldName.concat("Display");
-        this.referencesVariableID = Utilities.getVariableName(referencesID);
-        this.displayVariableName = Utilities.getVariableName(display);
-
-    }
-
-    public Field(String fieldName, String caption, String dataType, String references, String subFields,
-            String mapping, String key) {
-        this.fieldName = fieldName;
-        this.caption = caption;
-        this.dataType = dataType;
-        this.references = references;
-        this.subFields = subFields;
-        this.mapping = mapping;
-        this.key = key;
-        this.enumerated = false;
-        this.nullable = true;
-        this.variableName = Utilities.getVariableName(fieldName);
-        this.referencesID = this.fieldName.concat("ID");
-        this.display = this.fieldName.concat("Display");
-        this.referencesVariableID = Utilities.getVariableName(referencesID);
-        this.displayVariableName = Utilities.getVariableName(display);
-
-    }
-
-    public Field(String fieldName, String caption, String dataType, String references, String subFields,
-            String mapping, String key, String saburiKey) {
-        this.fieldName = fieldName;
-        this.caption = caption;
-        this.dataType = dataType;
-        this.references = references;
-        this.subFields = subFields;
-        this.mapping = mapping;
-        this.key = key;
-        this.saburiKey = saburiKey;
-        this.enumerated = false;
-        this.nullable = true;
-        this.variableName = Utilities.getVariableName(fieldName);
-        this.referencesID = this.fieldName.concat("ID");
-        this.display = this.fieldName.concat("Display");
-        this.referencesVariableID = Utilities.getVariableName(referencesID);
-        this.displayVariableName = Utilities.getVariableName(display);
-
-    }
-
-    public Field(String fieldName, String caption, String dataType, String references, String subFields,
-            String mapping, String key, String saburiKey, int size) {
-        this.fieldName = fieldName;
-        this.caption = caption;
-        this.dataType = dataType;
-        this.references = references;
-        this.subFields = subFields;
-        this.mapping = mapping;
-        this.key = key;
-        this.saburiKey = saburiKey;
-        this.size = size;
-        this.enumerated = false;
-        this.nullable = true;
-        this.variableName = Utilities.getVariableName(fieldName);
-        this.referencesID = this.fieldName.concat("ID");
-        this.display = this.fieldName.concat("Display");
-        this.referencesVariableID = Utilities.getVariableName(referencesID);
-        this.displayVariableName = Utilities.getVariableName(display);
-
-    }
-
-    public Field(String fieldName, String caption, String dataType, String references, String subFields,
-            String mapping, String key, String saburiKey, int size, boolean emumerated) {
-        this.fieldName = fieldName;
-        this.caption = caption;
-        this.dataType = dataType;
-        this.references = references;
-        this.subFields = subFields;
-        this.mapping = mapping;
-        this.key = key;
-        this.saburiKey = saburiKey;
-        this.size = size;
-        this.enumerated = emumerated;
-        this.nullable = true;
-        this.variableName = Utilities.getVariableName(fieldName);
-        this.referencesID = this.fieldName.concat("ID");
-        this.display = this.fieldName.concat("Display");
-        this.referencesVariableID = Utilities.getVariableName(referencesID);
-        this.displayVariableName = Utilities.getVariableName(display);
-
-    }
-
-    public Field(String fieldName, String caption, String dataType, String references, String subFields,
-            String mapping, String key, String saburiKey, int size, boolean emumerated, boolean nullable) {
-        this.fieldName = fieldName;
-        this.caption = caption;
-        this.dataType = dataType;
-        this.references = references;
-        this.subFields = subFields;
-        this.mapping = mapping;
-        this.key = key;
-        this.saburiKey = saburiKey;
-        this.size = size;
-        this.enumerated = emumerated;
-        this.nullable = nullable;
-        this.variableName = Utilities.getVariableName(fieldName);
-        this.referencesID = this.fieldName.concat("ID");
-        this.display = this.fieldName.concat("Display");
-        this.referencesVariableID = Utilities.getVariableName(referencesID);
-        this.displayVariableName = Utilities.getVariableName(display);
-
-    }
-
-    public Field(String fieldName, String caption, String dataType, String references, String subFields,
-            String mapping, String key, String saburiKey, int size, boolean emumerated, boolean nullable, String projectName) {
-        this.fieldName = fieldName;
-        this.caption = caption;
-        this.dataType = dataType;
-        this.references = references;
-        this.subFields = subFields;
-        this.mapping = mapping;
-        this.key = key;
-        this.saburiKey = saburiKey;
-        this.size = size;
-        this.enumerated = emumerated;
-        this.nullable = nullable;
-        this.projectName = projectName;
-        this.variableName = Utilities.getVariableName(fieldName);
-        this.referencesID = this.fieldName.concat("ID");
-        this.display = this.fieldName.concat("Display");
-        this.referencesVariableID = Utilities.getVariableName(referencesID);
-        this.displayVariableName = Utilities.getVariableName(display);
-
-    }
-    
-    
-    public Field(String fieldName, String caption, String dataType, String references, String subFields,
-            String mapping, String key, String saburiKey, int size, boolean emumerated, boolean nullable, String projectName,
-            boolean expose) {
-        this.fieldName = fieldName;
-        this.caption = caption;
-        this.dataType = dataType;
-        this.references = references;
-        this.subFields = subFields;
-        this.mapping = mapping;
-        this.key = key;
-        this.saburiKey = saburiKey;
-        this.size = size;
-        this.enumerated = emumerated;
-        this.nullable = nullable;
-        this.projectName = projectName;
-        this.expose=expose;
-        this.variableName = Utilities.getVariableName(fieldName);
-        this.referencesID = this.fieldName.concat("ID");
-        this.display = this.fieldName.concat("Display");
-        this.referencesVariableID = Utilities.getVariableName(referencesID);
-        this.displayVariableName = Utilities.getVariableName(display);
-
-    }
-    
-     public Field(String fieldName, String caption, String dataType, String references, String subFields,
-            String mapping, String key, String saburiKey, int size, boolean emumerated, boolean nullable, String projectName,
-            boolean expose, String moduleName) {
-        this.fieldName = fieldName;
-        this.caption = caption;
-        this.dataType = dataType;
-        this.references = references;
-        this.subFields = subFields;
-        this.mapping = mapping;
-        this.key = key;
-        this.saburiKey = saburiKey;
-        this.size = size;
-        this.enumerated = emumerated;
-        this.nullable = nullable;
-        this.projectName = projectName;
-        this.expose=expose;
-        this.moduleName = moduleName;
-        this.variableName = Utilities.getVariableName(fieldName);
-        this.referencesID = this.fieldName.concat("ID");
-        this.display = this.fieldName.concat("Display");
-        this.referencesVariableID = Utilities.getVariableName(referencesID);
-        this.displayVariableName = Utilities.getVariableName(display);
-
-    }
-     
-     public Field(String fieldName, String caption, String dataType, String references, String subFields,
-            String mapping, String key, String saburiKey, int size, boolean emumerated, boolean nullable, String projectName,
-            boolean expose, String moduleName, boolean select) {
-        this.fieldName = fieldName;
-        this.caption = caption;
-        this.dataType = dataType;
-        this.references = references;
-        this.subFields = subFields;
-        this.mapping = mapping;
-        this.key = key;
-        this.saburiKey = saburiKey;
-        this.size = size;
-        this.enumerated = emumerated;
-        this.nullable = nullable;
-        this.projectName = projectName;
-        this.expose=expose;
-        this.moduleName = moduleName;
-        this.select = select;
-        this.variableName = Utilities.getVariableName(fieldName);
-        this.referencesID = this.fieldName.concat("ID");
-        this.display = this.fieldName.concat("Display");
-        this.referencesVariableID = Utilities.getVariableName(referencesID);
-        this.displayVariableName = Utilities.getVariableName(display);
-
-    }
-
-    public String getFieldName() {
-        return fieldName;
-    }
-
-    public void setFieldName(String fieldName) {
-        this.fieldName = fieldName;
-    }
-
-    public String getCaption() {
-        return caption;
-    }
-
-    public void setCaption(String caption) {
-        this.caption = caption;
-    }
-
-    public String getDataType() {
-        return dataType;
-    }
-
-    public void setDataType(String dataType) {
-        this.dataType = dataType;
-    }
-
-    public String getReferences() {
-        return references;
-    }
-
-    public void setReferences(String references) {
-        this.references = references;
-    }
-
-    public String getMapping() {
-        return mapping;
-    }
-
-    public void setMapping(String mapping) {
-        this.mapping = mapping;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    public String getSaburiKey() {
-        return saburiKey;
-    }
-
-    public void setSaburiKey(String saburiKey) {
-        this.saburiKey = saburiKey;
-    }
-
-    public int getSize() {
-        return size;
-    }
-
-    public void setSize(int size) {
-        this.size = size;
-    }
-
-    public boolean isNullable() {
-        return nullable;
-    }
-
-    public void setNullable(boolean nullable) {
-        this.nullable = nullable;
-    }
-
-    public boolean isEnumerated() {
-        return enumerated;
-    }
-
-    public void setEnumerated(boolean enumerated) {
-        this.enumerated = enumerated;
-    }
-
-    public String getSubFields() {
-        return subFields;
-    }
-
-    public void setSubFields(String subFields) {
-        this.subFields = subFields;
-    }
-
-    public String getProjectName() {
-        return projectName;
-    }
-
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
-    }
-
-    public boolean isExpose() {
-        return expose;
-    }
-
-    public void setExpose(boolean expose) {
-        this.expose = expose;
-    }
-
-    public String getModuleName() {
-        return moduleName;
-    }
-
-    public void setModuleName(String moduleName) {
-        this.moduleName = moduleName;
-    }
-
-    public boolean isSelect() {
-        return select;
-    }
-
-    public void setSelect(boolean select) {
-        this.select = select;
-    }
-    
-    
-    
-    public String getVariableName() {
-        return variableName;
-    }
-
-    public void setVariableName(String variableName) {
-        this.variableName = variableName;
-    }
-
-    public String getReferencesID() {
-        return referencesID;
-    }
-
-    public void setReferencesID(String referencesID) {
-        this.referencesID = referencesID;
-    }
-
-    public String getDisplay() {
-        return display;
-    }
-
-    public void setDisplay(String display) {
-        this.display = display;
-    }
-
-    public String getReferencesVariableID() {
-        return referencesVariableID;
-    }
-
-    public void setReferencesVariableID(String referencesVariableID) {
-        this.referencesVariableID = referencesVariableID;
-    }
-
-    public String getDisplayVariableName() {
-        return displayVariableName;
-    }
-
-    public void setDisplayVariableName(String displayVariableName) {
-        this.displayVariableName = displayVariableName;
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -475,13 +61,48 @@ public class Field {
 
         Field field = (Field) o;
 
-        return this.getFieldName().equalsIgnoreCase(field.getFieldName());
+        return this.fieldName.equalsIgnoreCase(field.fieldName);
     }
 
     @Override
     public int hashCode() {
-        return getFieldName().hashCode();
+        return Objects.hashCode(this.fieldName);
 
     }
 
+    public boolean isCollection() {
+        return this.getDataType().equalsIgnoreCase("List") || this.getDataType().equalsIgnoreCase("Set");
+    }
+
+    public String getVariableName() {
+        return Utilities.getVariableName(this.fieldName);
+    }
+
+    public boolean isReference() {
+        return !(this.getReferences().isBlank() || this.getReferences().equalsIgnoreCase("None"));
+    }
+
+
+    public boolean isForeignKey(boolean forceReference) {
+        return this.isReference() && forceReference && !this.isEnumerated();
+    }
+
+    public boolean isPrimaryKey() {
+        return this.getKey().equalsIgnoreCase(Enums.keys.Primary.name());
+    }
+
+    public boolean isPrimaryKeyAuto() {
+        return this.key.equalsIgnoreCase(Enums.keys.Primary_Auto.name());
+    }
+
+    public boolean isHelper() {
+        return this.saburiKey.equalsIgnoreCase(Enums.Saburikeys.ID_Helper.name());
+    }
+
+    public boolean isIDGenerator() {
+        return this.getSaburiKey().equalsIgnoreCase(Enums.Saburikeys.ID_Generator.name());
+    }
+    public boolean isDisplayKey() {
+        return this.saburiKey.equalsIgnoreCase(Enums.Saburikeys.Display.name());
+    }
 }

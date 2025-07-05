@@ -5,13 +5,17 @@
  */
 package com.saburi.smartcorder.base;
 
+import lombok.Data;
+import lombok.experimental.SuperBuilder;
+
 /**
  *
  * @author Hp
  */
-public  abstract class Model {
-   
-    public abstract Object getId();
+@SuperBuilder
+@Data
+public  abstract class Model<T> {
+     protected T id;
 
     public abstract String getDisplay();
     

@@ -6,22 +6,18 @@
 package com.saburi.smartcorder.utils;
 
 
-import com.saburi.smartcorder.field.FieldDAO;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import com.saburi.smartcorder.field.Field;
+import com.saburi.smartcorder.project.Project;
+import com.saburi.smartcorder.project.ProjectFileStorageService;
+import com.saburi.smartcorder.utils.Enums.EntityTypes;
+import com.saburi.smartcorder.utils.Enums.Saburikeys;
+import com.saburi.smartcorder.utils.Enums.ServiceTypes;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
-import com.saburi.smartcorder.utils.Enums.EntityTypes;
-import com.saburi.smartcorder.utils.Enums.Saburikeys;
-import com.saburi.smartcorder.utils.Enums.ServiceTypes;
-import java.lang.reflect.Field;
 
 /**
  *
@@ -265,15 +261,15 @@ public class Utilities {
 //
 //    }
 
-    public static boolean hasHelper(List<FieldDAO> fields) {
+    public static boolean hasHelper(List<Field> fields) {
 //        FilteredList<FieldDAO> helperList = new FilteredList<>(FXCollections.observableList(fields), e -> true);
 //        helperList.setPredicate(FieldPredicates.isHelper());
-        return fields.stream().filter(FieldPredicates.isHelper()).count() > 0;
+        return fields.stream().filter(f->f.getSaburiKey().equalsIgnoreCase(Saburikeys.ID_Helper.name())).count() > 0;
 //        return helperList.size() > 0;
 
     }
 
-    public static boolean hasMultipart(List<FieldDAO> fields) {
+    public static boolean hasMultipart(List<Field> fields) {
         return fields.stream()
                 .filter(p -> p.getDataType().equalsIgnoreCase("Image"))
                 .count() > 0;
@@ -285,8 +281,8 @@ public class Utilities {
 
     }
 
-    public static FieldDAO getPrimaryKey(List<FieldDAO> fields) {
-        for (FieldDAO field : fields) {
+    public static Field getPrimaryKey(List<Field> fields) {
+        for (Field field : fields) {
             if (field.getKey().equalsIgnoreCase(Enums.keys.Primary.name())) {
                 return field;
             } else if (field.getKey().equalsIgnoreCase(Enums.keys.Primary_Auto.name())) {
@@ -296,8 +292,8 @@ public class Utilities {
         return null;
     }
 
-    public static FieldDAO getIDHelper(List<FieldDAO> fields) {
-        for (FieldDAO field : fields) {
+    public static Field getIDHelper(List<Field> fields) {
+        for (Field field : fields) {
             if (field.getSaburiKey().equalsIgnoreCase(Saburikeys.ID_Helper.name())) {
                 return field;
             }
@@ -305,8 +301,8 @@ public class Utilities {
         return null;
     }
 
-    public static FieldDAO getIDGenerator(List<FieldDAO> fields) {
-        for (FieldDAO field : fields) {
+    public static Field getIDGenerator(List<Field> fields) {
+        for (Field field : fields) {
             if (field.getSaburiKey().equalsIgnoreCase(Saburikeys.ID_Generator.name())) {
                 return field;
             }
@@ -402,14 +398,15 @@ public class Utilities {
         return serviceTypes.equals(Enums.ServiceTypes.Read_Only) ? "ReadOnlyController" : "BaseController";
     }
 
-    public static String makeResponseImport(Project project) throws Exception {
-        Project parentProject = new ProjectDAO().get(project.getCommonProjectName());
+    public static String makeResponseImport(Project project, ProjectFileStorageService projectFileStorageService) throws Exception {
+        String commonProjectName = project.getCommonProjectName();
+        Project parentProject = projectFileStorageService.findById(project.getCommonProjectName()).orElse(project);
         parentProject = parentProject == null ? project : parentProject;
         return "import " + parentProject.getBasePackage() + ".dtos." + RESPONSE_INERFACE + ";\n";
 
     }
 
-    public static String getDataTypeImps(FieldDAO fieldDAO) {
+    public static String getDataTypeImps(Field fieldDAO) {
         String dataType = fieldDAO.getDataType();
         if (dataType.equalsIgnoreCase("LocalDate")) {
             return "import java.time.LocalDate;\n";
@@ -426,7 +423,7 @@ public class Utilities {
         return "";
     }
 
-    public static String getNonPrimitiveDataTypeImports(List<FieldDAO> fieldDAOs) {
+    public static String getNonPrimitiveDataTypeImports(List<Field> fieldDAOs) {
         String v = "";
         v = fieldDAOs
                 .stream()
