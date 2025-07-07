@@ -519,7 +519,7 @@
 //                addIfNotExists(list, "import java.util." + getDataType());
 //                addIfNotExists(list, "import jakarta.persistence.CascadeType");
 //                addIfNotExists(list, "import jakarta.persistence.JoinTable");
-//                if (project.getProjectType().equals(Enums.ProjectTypes.Springboot_API)) {
+//                if (project.getProjectType().equals(Enums.ProjectTypes.Springboot)) {
 //                    addIfNotExists(list, "import com.fasterxml.jackson.annotation.JsonIgnoreProperties;");
 //                }
 //                if (getDataType().equalsIgnoreCase("List")) {
@@ -535,10 +535,10 @@
 //            }
 //
 //            if (enumerated.get()) {
-//                if (project.getProjectType().equals(Enums.ProjectTypes.Desktop)) {
+//                if (project.getProjectType().equals(Enums.ProjectTypes.JavaFX)) {
 //                    addIfNotExists(list, "import " + project.getUtilPackage() + "." + project.getEnumClass() + "." + references.get());
 //                }
-//                if (project.getProjectType().equals(Enums.ProjectTypes.Springboot_API)) {
+//                if (project.getProjectType().equals(Enums.ProjectTypes.Springboot)) {
 //
 //                    String enumPackage = (referencesIN(project)) ? project.getBasePackage() : commonProject.getBasePackage();
 //                    addIfNotExists(list, "import " + enumPackage + ".enums." + references.get());
@@ -561,7 +561,7 @@
 //                    addIfNotExists(list, "import jakarta.persistence.ForeignKey");
 //                    addIfNotExists(list, "import jakarta.persistence." + mapping.get());
 //
-//                    if (project.getProjectType().equals(Enums.ProjectTypes.Desktop)) {
+//                    if (project.getProjectType().equals(Enums.ProjectTypes.JavaFX)) {
 //                        if (!project.getProjectName().equalsIgnoreCase(currentProject.getProjectName())) {
 //                            addIfNotExists(list, "import " + project.getEntityPackage() + "." + references.get());
 //                        }

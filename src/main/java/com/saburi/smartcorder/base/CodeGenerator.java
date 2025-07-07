@@ -44,7 +44,7 @@ public class CodeGenerator {
 
             List<Field> primaryKeyList = fields.stream().filter(f->f.isPrimaryKey()||f.isPrimaryKeyAuto()).toList();
 
-            if (primaryKeyList.isEmpty() && project.getProjectType().equals(Enums.ProjectTypes.Desktop)) {
+            if (primaryKeyList.isEmpty() && project.getProjectType().equals(Enums.ProjectTypes.JavaFX)) {
                 throw new KnownException("You must enter a primary key");
             }
             if (primaryKeyList.size() > 1) {
@@ -81,7 +81,7 @@ public class CodeGenerator {
                     throw new KnownException("You cannot have more than 1 ID Generators");
                 } else {
 
-                    if (helperList.isEmpty() && project.getProjectType().equals(Enums.ProjectTypes.Desktop)) {
+                    if (helperList.isEmpty() && project.getProjectType().equals(Enums.ProjectTypes.JavaFX)) {
                         throw new KnownException("You cannot have ID Generator with ID Helper");
                     }
                 }

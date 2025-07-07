@@ -1,96 +1,63 @@
-<script  setup>
-import { ref, computed } from 'vue';
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue';
 // import type { Field } from '@/field/Field.ts';
 import { createDefaultField } from '@/field/Field';
+import { defineLookupStore } from '@/lookup/lookupStore';
+import constants from '@/utils/constants';
+import fieldHeaders from '@/field/FieldNav';
+// import  { Field } from '@/field/Field';
+import { FieldParser } from '@/field/FieldParser';
 
-const headers = [
-  { key: "fieldName", title: "Field Name", type: "text" },
-  { key: "caption", title: "Caption", type: "text" },
-  {
-    key: "dataType", title: "Data Type", type: "select",
-    namedValues: ["String", "List", "Set", "Image", "LocalDate", "LocalDateTime",
-      "LocalTime", "boolean", "int", "long", "float", "double", "BigDecimal", "File"]
-  },
-  { key: "references", title: "References", type: "text" },
-  {
-    key: "mapping", title: "Mapping", type: "select",
-    namedValues: ['OneToOne', 'ManyToOne', 'OneToMany', 'ManyToMany']
-  },
-  { key: "key", title: "Key", type: "select", namedValues: ['Primary', 'Primary_Auto', 'Foreign', 'Unique', 'Unique_Group'] },
-  {
-    key: "saburiKey", title: "Saburi Key", type: "select",
-    namedValues: ['ID_Helper', 'ID_Generator', 'Display', 'UI_Only', 'Query_Only', 'Read_Only']
-  },
-  { key: "size", title: "Size", type: "text" },
-  { key: "nullable", title: "Nullable", type: "checkbox" },
-  { key: "enumerated", title: "Enum", type: "checkbox" },
-  { key: "projectName", title: "Project Name", type: "text" },
-  { key: "expose", title: "Expose", type: "checkbox" },
-  { key: "moduleName", title: "Module Name", type: "text" },
-  { key: "select", title: "Select", type: "checkbox" },
-  { key: "subFields", title: "Sub Fields", type: "text" },
 
-];
+
+const computedHeaders = computed(() => {
+  if (!model.value?.projectType) {
+    return fieldHeaders.filter(h => !h.projectType); // If no projectType is set, return all headers
+  }
+
+  return fieldHeaders.filter(header => {
+    // If header has no projectType restriction, include it
+    if (!header.projectType) return true;
+
+    // Otherwise, check if model.projectType is in the header's allowed projectTypes
+    return header.projectType.includes(model.value.projectType);
+  });
+});
+
+console.log(constants.projectTypes);
+
 
 const cols = 12;
-const md = 3;
+const md = 2;
 const sm = 6;
-
-
-const fields = ref([
-  {
-    fieldName: 'field1',
-    caption: 'Field 1',
-    dataType: 'String',
-    references: '',
-    mapping: '',
-    key: '',
-    saburiKey: '',
-    size: 100,
-    nullable: false,
-    enumerated: false,
-    subFields: '',
-    projectName: '',
-    expose: false,
-    moduleName: '',
-    select: false,
-  },
-  {
-    fieldName: 'field2',
-    caption: 'Field 2',
-    dataType: 'int',
-    references: '',
-    mapping: '',
-    key: '',
-    saburiKey: '',
-    size: 100,
-    nullable: true,
-    enumerated: false,
-    subFields: '',
-    projectName: '',
-    expose: false,
-    moduleName: '',
-    select: false,
-  }
-]);
-const model = ref({ projectType: '', projectName: '', objectName: '', objectCaption: '', entityType: '', model: '', file: '', fieldName: '' });
+const fields = ref([]);
+const importedText = ref(''); // will hold the raw file contents
+const model = ref({ projectType: '', projectName: '', objectName: '', objectCaption: '', entityType: '', serviceType: 'Base', model: '', file: '', fieldName: '' });
 
 
 const addField = () => {
   fields.value.push(createDefaultField());
 };
 
+// Handle file input change
 const handleImport = (file) => {
+  const selectedFile = Array.isArray(file) ? file[0] : file;
+  if (!selectedFile) return;
+
   const reader = new FileReader();
   reader.onload = (e) => {
-    try {
-      const data = JSON.parse(e.target?.result);
-      fields.value = data.fields || [];
-    } catch (error) {
-      console.error('Error parsing JSON:', error);
-    }
+    console.log("Imported Event", e)
+    importedText.value = e.target?.result;
+    console.log("Imported Text", importedText.value)
   };
-  reader.readAsText(file);
+  reader.readAsText(selectedFile);
+};
+
+// Parse and populate fields
+const importFields = () => {
+  if (!importedText.value) return;
+  fields.value = FieldParser.parse(importedText.value);
+  console.log('Parsed fields:', fields.value);
 };
 
 const exportFields = () => {
@@ -105,17 +72,79 @@ const exportFields = () => {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 };
+
+const lookupStore = defineLookupStore();
+
+onMounted(() => {
+  lookupStore.getProjectTypes();
+  lookupStore.getSpringBootFiles();
+  lookupStore.getEntityTypes();
+  lookupStore.getServiceTypes();
+  lookupStore.getVueFiles();
+  lookupStore.getJavaFxFiles()
+});
+
+const files = ref([]);
+const filesLoading = ref(false);
+
+const isSpringBootProject = computed(() => model.value.projectType === constants.projectTypes.springBoot)
+const isVueProject = computed(() => model.value.projectType === constants.projectTypes.vue)
+
+watch(() => model.value.projectType, (newValue) => {
+  files.value = [];
+  filesLoading.value = false
+  if (!newValue) return
+  if (newValue === constants.projectTypes.springBoot) {
+    files.value = lookupStore.springBootFiles;
+    filesLoading.value = lookupStore.springBootFilesLoading
+  }
+  else if (newValue === constants.projectTypes.vue) {
+    files.value = lookupStore.vueFiles;
+    filesLoading.value = lookupStore.vueFilesLoading
+  }
+  else if (newValue === constants.projectTypes.javaFx) {
+    files.value = lookupStore.javaFxFiles;
+    filesLoading.value = lookupStore.javaFxFilesLoading
+  }
+});
+
+
+
+const selectedFile = ref < File | null > (null);
+const fileContent = ref('');
+
+watch(fileContent, (newValue) => {
+  console.log("File Content", newValue)
+  fields.value = [];
+  if (!newValue) return;
+  fields.value = FieldParser.parse(newValue.trim());
+  console.log(fields);
+})
+
+
+
+
+
+
+
+
+
 </script>
 
 <template>
   <v-card class="pa-4 mx-2">
-    <v-row no-gutters>
-      <v-col cols="10">
+    <v-row>
+      <!-- <v-col cols="4">
         <v-file-input label="Import Field Config" @change="handleImport" density="compact" hide-details />
+      </v-col> -->
+
+      <v-col cols="4">
+        <text-file-reader v-model="selectedFile" v-model:content="fileContent" density="compact" hide-details label="Import Field" />
       </v-col>
 
+
       <v-col cols="1">
-        <v-btn @click="exportFields" color="primary">
+        <v-btn @click="importFields" color="primary">
           Import
         </v-btn>
       </v-col>
@@ -125,52 +154,59 @@ const exportFields = () => {
           Export
         </v-btn>
       </v-col>
+
     </v-row>
+
     <v-row>
-      <v-row no-gutters>
-        <v-col :cols="cols" :md="md" :sm="sm">
-          <v-autocomplete v-model="model.projectType" label="Project Type" density="compact" hide-details />
-        </v-col>
-        <v-col :cols="cols" :md="md" :sm="sm">
-          <v-autocomplete v-model="model.projectName" label="Project" density="compact" hide-details />
-        </v-col>
-        <v-col :cols="cols" :md="md" :sm="sm">
-          <v-text-field v-model="model.objectName" label="Object Name" density="compact" hide-details />
-        </v-col>
-        <v-col :cols="cols" :md="md" :sm="sm">
-          <v-text-field v-model="model.objectCaption" label="Object Caption" density="compact" hide-details />
-        </v-col>
-        <v-col :cols="cols" :md="md" :sm="sm" v-if="model.projectType === 'SpringBoot'">
-          <v-autocomplete v-model="model.entityType" label="Entity Type" density="compact" hide-details />
-        </v-col>
-        <v-col :cols="cols" :md="md" :sm="sm" v-if="model.projectType === 'Vue 3' || model.projectType === 'Vue'">
-          <v-text-field v-model="model.model" label="Module" density="compact" hide-details />
-        </v-col>
-      </v-row>
-
-      <v-row no-gutters>
-        <v-col :cols="cols" :md="md" :sm="sm">
-          <v-autocomplete v-model="model.file" label="File" density="compact" hide-details />
-        </v-col>
-        <v-col :cols="cols" :md="md" :sm="sm">
-          <v-autocomplete v-model="model.projectName" label="Project" density="compact" hide-details />
-        </v-col>
-        <v-col :cols="cols" :md="md" :sm="sm">
-          <v-autocomplete v-model="model.fieldName" label="File Name" density="compact" hide-details />
-        </v-col>
-      </v-row>
-
+      <v-col :cols="cols" :md="md" :sm="sm">
+        <v-autocomplete label="Project Type" density="compact" :items="lookupStore.projectTypes"
+          v-model="model.projectType" :loading="lookupStore.projectTypesLoading" />
+      </v-col>
+      <v-col :cols="cols" :md="md" :sm="sm">
+        <v-autocomplete v-model="model.projectName" label="Project" density="compact" hide-details />
+      </v-col>
+      <v-col :cols="cols" :md="md" :sm="sm">
+        <v-text-field v-model="model.objectName" label="Object Name" density="compact" hide-details />
+      </v-col>
+      <v-col :cols="cols" :md="md" :sm="sm">
+        <v-text-field v-model="model.objectCaption" label="Object Caption" density="compact" hide-details />
+      </v-col>
+      <v-col :cols="cols" :md="md" :sm="sm" v-if="isSpringBootProject">
+        <v-autocomplete v-model="model.entityType" label="Entity Type" density="compact"
+          :items="lookupStore.entityTypes" :loading="lookupStore.entityTypesLoading" />
+      </v-col>
+      <v-col :cols="cols" :md="md" :sm="sm" v-if="isSpringBootProject">
+        <v-autocomplete v-model="model.serviceType" label="Service Type" density="compact"
+          :items="lookupStore.serviceTypes" :loading="lookupStore.serviceTypesLoading" />
+      </v-col>
+      <v-col :cols="cols" :md="md" :sm="sm" v-if="isVueProject">
+        <v-text-field v-model="model.model" label="Module" density="compact" hide-details />
+      </v-col>
     </v-row>
-    <v-data-table :items="fields" :headers="headers" dense items-per-page="20" density="compact">
-      <template v-slot:top>
+
+    <v-row no-gutters>
+      <v-col :cols="cols" :md="md" :sm="sm">
+        <v-autocomplete v-model="model.file" label="File" density="compact" :items="files" :loading="filesLoading"
+          multiple clearable />
+      </v-col>
+      <v-col :cols="cols" :md="md" :sm="sm">
+        <v-autocomplete v-model="model.projectName" label="Project" density="compact" hide-details />
+      </v-col>
+      <v-col :cols="cols" :md="md" :sm="sm">
+        <v-autocomplete v-model="model.fieldName" label="File Name" density="compact" hide-details />
+      </v-col>
+    </v-row>
+
+    <v-data-table :items="fields" :items-per-page="-1" hide-default-footer :headers="computedHeaders" dense
+      items-per-page="20" density="compact" class="mt-4">
+      <!-- <template v-slot:top>
         <v-btn @click="addField">Add Field</v-btn>
-      </template>
+      </template> -->
 
       <!-- Dynamically render item slots -->
-      <template v-for="header in headers" :key="header.key" v-slot:[`item.${header.key}`]="{ item }">
+      <template v-for="header in fieldHeaders" :key="header.key" v-slot:[`item.${header.key}`]="{ item }">
         <!-- Checkbox type -->
-        <v-checkbox v-if="header.type === 'checkbox'" v-model="item[header.key]" density="compact"
-          hide-details />
+        <v-checkbox v-if="header.type === 'checkbox'" v-model="item[header.key]" density="compact" hide-details />
 
         <!-- Select type -->
         <v-autocomplete v-else-if="header.type === 'select'" :items="header.namedValues || []"
@@ -184,6 +220,7 @@ const exportFields = () => {
     <v-card-actions>
       <v-file-input label="Output Location" @change="handleImport" density="compact" hide-details />
       <v-spacer />
+      <v-label>{{ fields.length }} row(s)</v-label>
       <v-btn @click="addField">Add Field</v-btn>
       <v-btn color="primary" @click="console.log(fields)">Generate Code</v-btn>
     </v-card-actions>

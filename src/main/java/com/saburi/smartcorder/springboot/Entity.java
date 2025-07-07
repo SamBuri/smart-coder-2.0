@@ -58,7 +58,7 @@ public class Entity extends SpringbootUtils {
 
 
     public String makeEntityImports(Project project, Enums.EntityTypes entityTypes) throws Exception {
-        String idImp = project.getProjectType().equals(Enums.ProjectTypes.Desktop) ? """
+        String idImp = project.getProjectType().equals(Enums.ProjectTypes.JavaFX) ? """
                 import jakarta.persistence.Id;
                  """ : "";
         String imp = """
@@ -80,7 +80,7 @@ public class Entity extends SpringbootUtils {
                      import jakarta.persistence.UniqueConstraint;
                     """;
         }
-        if (project.getProjectType().equals(Enums.ProjectTypes.Springboot_API)) {
+        if (project.getProjectType().equals(Enums.ProjectTypes.Springboot)) {
             if (!commonProject.getProjectName().equalsIgnoreCase(project.getProjectName())) {
                 imp += "import " + commonProject.getBasePackage() + ".entities." + getParentEntity(entityTypes) + ";\n";
                 imp += "import " + commonProject.getBasePackage() + ".dtos.ResponseData;\n";
@@ -276,7 +276,7 @@ public class Entity extends SpringbootUtils {
 //        return setters;
 //    }
     public String overriddenID(Project project) {
-        if (project.getProjectType().equals(Enums.ProjectTypes.Springboot_API)) {
+        if (project.getProjectType().equals(Enums.ProjectTypes.Springboot)) {
             return "";
         }
 
@@ -339,7 +339,7 @@ public class Entity extends SpringbootUtils {
     public String otherMethods(Project project, Enums.EntityTypes entityTypes) {
 
         boolean isAutoPK;
-        if (project.getProjectType().equals(Enums.ProjectTypes.Desktop)) {
+        if (project.getProjectType().equals(Enums.ProjectTypes.JavaFX)) {
             isAutoPK = primaryKeyFied.isPrimaryKeyAuto();
         } else {
             isAutoPK = entityTypes.equals(Enums.EntityTypes.Auto_ID_Int) || entityTypes.equals(Enums.EntityTypes.Auto_ID_Long);
@@ -389,13 +389,13 @@ public class Entity extends SpringbootUtils {
             hashBody = "return " + hashBody;
 
         } else {
-            hashBody = " return Objects.hashCode(this." + (project.getProjectType().equals(Enums.ProjectTypes.Desktop) ? primaryKeyVariableName : "id") + ");\n";
+            hashBody = " return Objects.hashCode(this." + (project.getProjectType().equals(Enums.ProjectTypes.JavaFX) ? primaryKeyVariableName : "id") + ");\n";
 
         }
 
         String objectHashCode = makeMethod("@Override\npublic", "int", "hashCode", "", hashBody);
         String idValueMessage = "";
-        if (project.getProjectType().equals(Enums.ProjectTypes.Springboot_API)) {
+        if (project.getProjectType().equals(Enums.ProjectTypes.Springboot)) {
             if (entityTypes.equals(Enums.EntityTypes.Auto_ID_Gen)) {
 
                 Field idgenerator = Utilities.getIDGenerator(fields);
@@ -450,7 +450,7 @@ public class Entity extends SpringbootUtils {
         String entityPackage = project.getEntityPackage();
         String packageName = isNullOrEmpty(entityPackage)
                 ? project.getBasePackage() + "." + objectName.toLowerCase() : entityPackage;
-        String imp = project.getProjectType().equals(Enums.ProjectTypes.Springboot_API) ? "implements ResponseData" : "";
+        String imp = project.getProjectType().equals(Enums.ProjectTypes.Springboot) ? "implements ResponseData" : "";
 
         JavaClass javaClass = new JavaClass(packageName, objectName, this.makeEntityImports(project, entityTypes),
                 this.makeAnnotedFields(), constructor, "", methods);

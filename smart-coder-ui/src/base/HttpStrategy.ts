@@ -1,5 +1,4 @@
-// src/types/http.ts
-export interface HttpStrategy {
+export default interface HttpStrategy {
   resultHandler?: (response: any) => any;
   errorHandler?: (error: any) => any;
 }

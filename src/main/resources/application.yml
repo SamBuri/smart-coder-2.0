@@ -9,6 +9,13 @@ db:
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:pass}
 
+cors:
+    allowed-origins: http://localhost:3000,https://yourdomain.com
+    allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+    max-age: 3600
+
 spring:
     application:
         name: smart-coder
@@ -32,3 +39,7 @@ spring:
             dle-timeout: 30000
     liquibase:
         change-log: classpath:/changelogs/changelog-master.xml
+
+
+
+

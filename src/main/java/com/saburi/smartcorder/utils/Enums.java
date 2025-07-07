@@ -45,7 +45,7 @@ public class Enums {
     };
 
     public enum ProjectTypes {
-        Springboot_API, Vue, Desktop
+        Springboot, Vue, JavaFX
     };
 
     public enum SpringBootFiles {
@@ -56,7 +56,7 @@ public class Enums {
         All, Model, View, Store, Nav,Search
     };
 
-    public enum DesktopFiles {
+    public enum JavaFxFiles {
         All, Entity, DBAcess, Controller, ViewController, FXML, FXML_View, Menu, SQL
     }
 
