@@ -36,21 +36,31 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cache: 'maven'
 
-      # 2. Build the Native Sidecar for the specific OS
+
+
+#      # 2. Build the Native Sidecar for the specific OS
 #      - name: Build Native Backend
+#        shell: bash
 #        run: |
 #          ./mvnw -Pnative native:compile
+#
 #          mkdir -p smart-coder-ui/src-tauri/binaries
-#          # Move and rename the binary to match Tauri's sidecar expectation
-#          # Note: Adjust 'target/smart-coder-backend' if your artifact name differs
-#          if [ "${{ matrix.platform }}" == "windows-latest" ]; then
+#
+#          if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
+#            # For a universal build, Tauri needs both slices to exist
+#            # so it can bundle them into the universal binary.
+#            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-aarch64-apple-darwin
+#            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-x86_64-apple-darwin
+#            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-universal-apple-darwin
+#            chmod +x smart-coder-ui/src-tauri/binaries/backend-aarch64-apple-darwin
+#            chmod +x smart-coder-ui/src-tauri/binaries/backend-x86_64-apple-darwin
+#            chmod +x smart-coder-ui/src-tauri/binaries/backend-universal-apple-darwin
+#          elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
 #            mv target/smart-coder-backend.exe smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
 #          else
 #            mv target/smart-coder-backend smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
 #            chmod +x smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
 #          fi
-#        shell: bash
-
 
       # 2. Build the Native Sidecar for the specific OS
       - name: Build Native Backend
@@ -58,21 +68,27 @@ jobs:
         run: |
           ./mvnw -Pnative native:compile
           
-          mkdir -p smart-coder-ui/src-tauri/binaries
+          # Define the target directory inside src-tauri
+          DEST="smart-coder-ui/src-tauri/binaries"
+          mkdir -p "$DEST"
           
           if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
-            # For a universal build, Tauri needs both slices to exist
-            # so it can bundle them into the universal binary.
-            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-aarch64-apple-darwin
-            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-x86_64-apple-darwin
-            chmod +x smart-coder-ui/src-tauri/binaries/backend-aarch64-apple-darwin
-            chmod +x smart-coder-ui/src-tauri/binaries/backend-x86_64-apple-darwin
+            # Tauri "universal" builds REQUIRE these two specific filenames to exist
+            cp target/smart-coder-backend "$DEST/backend-aarch64-apple-darwin"
+            cp target/smart-coder-backend "$DEST/backend-x86_64-apple-darwin"
+          
+            # Keep this one just in case your tauri.conf.json specifically references it
+            cp target/smart-coder-backend "$DEST/backend-universal-apple-darwin"
+          
+            chmod +x "$DEST/backend-aarch64-apple-darwin"
+            chmod +x "$DEST/backend-x86_64-apple-darwin"
+            chmod +x "$DEST/backend-universal-apple-darwin"
           elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
-            mv target/smart-coder-backend.exe smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
+            cp target/smart-coder-backend.exe "$DEST/${{ matrix.sidecar_name }}"
           else
-            mv target/smart-coder-backend smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
-            chmod +x smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
-          fi      
+            cp target/smart-coder-backend "$DEST/${{ matrix.sidecar_name }}"
+            chmod +x "$DEST/${{ matrix.sidecar_name }}"
+          fi
 
       # 3. Setup Node.js
       - name: setup node
@@ -109,6 +125,7 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         with:
           projectPath: smart-coder-ui
           tagName: v__VERSION__ # uses version from smart-coder-ui/src-tauri/tauri.conf.json
