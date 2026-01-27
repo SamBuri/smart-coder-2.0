@@ -1,0 +1,4 @@
+# Enforce LF for Maven Wrapper files (prevents CRLF corruption on Windows clones)
+.mvn/wrapper/* text eol=lf
+mvnw text eol=lf
+mvnw.cmd text eol=crlf  # ← this one is allowed/expected to have CRLF since it's Windows batch
