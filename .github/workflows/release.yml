@@ -36,20 +36,23 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cache: 'maven'
 
+
       # 2. Build the Native Sidecar for the specific OS
       - name: Build Native Backend
+        shell: bash
         run: |
-          ./mvnw -Pnative native:compile
-          mkdir -p smart-coder-ui/src-tauri/binaries
-          # Move and rename the binary to match Tauri's sidecar expectation
-          # Note: Adjust 'target/smart-coder-backend' if your artifact name differs
+          # 1. Deep clean the properties file of ANY hidden whitespace/newlines
           if [ "${{ matrix.platform }}" == "windows-latest" ]; then
-            # 2. Build the Native Sidecar for the specific OS
-      - name: Build Native Backend
-        run: |
-          # This line removes any hidden \r characters from the properties file before running Maven
-          sed -i 's/\r$//' .mvn/wrapper/maven-wrapper.properties
+            # Use PowerShell to strip all trailing whitespace/newlines from the URL line
+            pwsh -Command "(Get-Content .mvn/wrapper/maven-wrapper.properties) -replace '\s+$', '' | Set-Content .mvn/wrapper/maven-wrapper.properties"
+          else
+            sed -i 's/[[:space:]]*$//' .mvn/wrapper/maven-wrapper.properties
+          fi
+
+          # 2. Run the build
           ./mvnw -Pnative native:compile
+          
+          # 3. Move the binary
           mkdir -p smart-coder-ui/src-tauri/binaries
           if [ "${{ matrix.platform }}" == "windows-latest" ]; then
             mv target/smart-coder-backend.exe smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
@@ -57,7 +60,7 @@ jobs:
             mv target/smart-coder-backend smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
             chmod +x smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
           fi
-        shell: bash
+          
 
       # 3. Setup Node.js
       - name: setup node
