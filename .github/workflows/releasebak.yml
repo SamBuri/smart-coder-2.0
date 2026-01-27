@@ -1,0 +1,135 @@
+#name: "Build & Release Smart-Coder"
+#
+#on:
+#  push:
+#    branches:
+#      - master
+#
+#jobs:
+#  publish:
+#    permissions:
+#      contents: write
+#    strategy:
+#      fail-fast: false
+#      matrix:
+#        include:
+#          - platform: "macos-latest"
+#            args: "--target universal-apple-darwin"
+#            sidecar_name: "backend-universal-apple-darwin"
+#          - platform: "ubuntu-22.04"
+#            args: "--target x86_64-unknown-linux-gnu"
+#            sidecar_name: "backend-x86_64-unknown-linux-gnu"
+#          - platform: "windows-latest"
+#            args: "--target x86_64-pc-windows-msvc"
+#            sidecar_name: "backend-x86_64-pc-windows-msvc.exe"
+#
+#    runs-on: ${{ matrix.platform }}
+#    steps:
+#      - uses: actions/checkout@v4
+#
+#      # 1. Setup Java & GraalVM for the specific OS
+#      - name: Set up GraalVM
+#        uses: graalvm/setup-graalvm@v1
+#        with:
+#          java-version: '21'
+#          distribution: 'graalvm'
+#          github-token: ${{ secrets.GITHUB_TOKEN }}
+#          cache: 'maven'
+#
+#
+#
+##      # 2. Build the Native Sidecar for the specific OS
+##      - name: Build Native Backend
+##        shell: bash
+##        run: |
+##          ./mvnw -Pnative native:compile
+##
+##          mkdir -p smart-coder-ui/src-tauri/binaries
+##
+##          if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
+##            # For a universal build, Tauri needs both slices to exist
+##            # so it can bundle them into the universal binary.
+##            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-aarch64-apple-darwin
+##            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-x86_64-apple-darwin
+##            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-universal-apple-darwin
+##            chmod +x smart-coder-ui/src-tauri/binaries/backend-aarch64-apple-darwin
+##            chmod +x smart-coder-ui/src-tauri/binaries/backend-x86_64-apple-darwin
+##            chmod +x smart-coder-ui/src-tauri/binaries/backend-universal-apple-darwin
+##          elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
+##            mv target/smart-coder-backend.exe smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
+##          else
+##            mv target/smart-coder-backend smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
+##            chmod +x smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
+##          fi
+#
+#      # 2. Build the Native Sidecar for the specific OS
+#      - name: Build Native Backend
+#        shell: bash
+#        run: |
+#          ./mvnw -Pnative native:compile
+#
+#          # Define the target directory inside src-tauri
+#          DEST="smart-coder-ui/src-tauri/binaries"
+#          mkdir -p "$DEST"
+#
+#          if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
+#            # Tauri "universal" builds REQUIRE these two specific filenames to exist
+#            cp target/smart-coder-backend "$DEST/backend-aarch64-apple-darwin"
+#            cp target/smart-coder-backend "$DEST/backend-x86_64-apple-darwin"
+#
+#            # Keep this one just in case your tauri.conf.json specifically references it
+#            cp target/smart-coder-backend "$DEST/backend-universal-apple-darwin"
+#
+#            chmod +x "$DEST/backend-aarch64-apple-darwin"
+#            chmod +x "$DEST/backend-x86_64-apple-darwin"
+#            chmod +x "$DEST/backend-universal-apple-darwin"
+#          elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
+#            cp target/smart-coder-backend.exe "$DEST/${{ matrix.sidecar_name }}"
+#          else
+#            cp target/smart-coder-backend "$DEST/${{ matrix.sidecar_name }}"
+#            chmod +x "$DEST/${{ matrix.sidecar_name }}"
+#          fi
+#
+#      # 3. Setup Node.js
+#      - name: setup node
+#        uses: actions/setup-node@v4
+#        with:
+#          node-version: lts/*
+#          cache: 'npm'
+#          cache-dependency-path: smart-coder-ui/package-lock.json
+#
+#      # 4. Install Rust
+#      - name: install Rust stable
+#        uses: dtolnay/rust-toolchain@stable
+#        with:
+#          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+#
+#      # 5. Rust Cache
+#      - uses: swatinem/rust-cache@v2
+#        with:
+#          workspaces: smart-coder-ui/src-tauri -> target
+#
+#      # 6. Install Linux Dependencies
+#      - name: install dependencies (ubuntu only)
+#        if: matrix.platform == 'ubuntu-22.04'
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install -y libgtk-3-dev webkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+#
+#      # 7. Install Frontend Deps
+#      - name: install frontend dependencies
+#        run: cd smart-coder-ui && npm install
+#
+#      # 8. Build & Release via Tauri Action
+#      - name: Build Tauri App
+#        uses: tauri-apps/tauri-action@v0
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+#        with:
+#          projectPath: smart-coder-ui
+#          tagName: v__VERSION__ # uses version from smart-coder-ui/src-tauri/tauri.conf.json
+#          releaseName: "Smart-Coder v__VERSION__"
+#          releaseDraft: true
+#          prerelease: false
+#          args: ${{ matrix.args }}
