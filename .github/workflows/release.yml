@@ -61,15 +61,18 @@ jobs:
           mkdir -p smart-coder-ui/src-tauri/binaries
           
           if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
-            # Tauri universal builds look for this specific suffix
-            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-universal-apple-darwin
-            chmod +x smart-coder-ui/src-tauri/binaries/backend-universal-apple-darwin
+            # For a universal build, Tauri needs both slices to exist
+            # so it can bundle them into the universal binary.
+            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-aarch64-apple-darwin
+            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-x86_64-apple-darwin
+            chmod +x smart-coder-ui/src-tauri/binaries/backend-aarch64-apple-darwin
+            chmod +x smart-coder-ui/src-tauri/binaries/backend-x86_64-apple-darwin
           elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
             mv target/smart-coder-backend.exe smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
           else
             mv target/smart-coder-backend smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
             chmod +x smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
-          fi        
+          fi      
 
       # 3. Setup Node.js
       - name: setup node
