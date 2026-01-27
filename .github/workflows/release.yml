@@ -1,7 +1,7 @@
 name: Build and Release
 on:
   push:
-    branches: [ main ] # Trigger only when you push to main
+    branches: [ master ] # Trigger only when you push to main
 
 jobs:
   build-sidecar:
