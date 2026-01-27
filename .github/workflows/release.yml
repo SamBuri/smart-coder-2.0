@@ -44,6 +44,14 @@ jobs:
           # Move and rename the binary to match Tauri's sidecar expectation
           # Note: Adjust 'target/smart-coder-backend' if your artifact name differs
           if [ "${{ matrix.platform }}" == "windows-latest" ]; then
+            # 2. Build the Native Sidecar for the specific OS
+      - name: Build Native Backend
+        run: |
+          # This line removes any hidden \r characters from the properties file before running Maven
+          sed -i 's/\r$//' .mvn/wrapper/maven-wrapper.properties
+          ./mvnw -Pnative native:compile
+          mkdir -p smart-coder-ui/src-tauri/binaries
+          if [ "${{ matrix.platform }}" == "windows-latest" ]; then
             mv target/smart-coder-backend.exe smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
           else
             mv target/smart-coder-backend smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
