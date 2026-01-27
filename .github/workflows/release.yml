@@ -38,23 +38,18 @@ jobs:
 
       # 2. Build the Native Sidecar for the specific OS
       - name: Build Native Backend
-        shell: bash
         run: |
-          node -e "const fs = require('fs'); const path = '.mvn/wrapper/maven-wrapper.properties'; fs.writeFileSync(path, fs.readFileSync(path, 'utf8').replace(/\r?\n|\r/g, '\n').trim());"
           ./mvnw -Pnative native:compile
-          
           mkdir -p smart-coder-ui/src-tauri/binaries
-          
-          if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
-            # Tauri universal builds look for this specific suffix
-            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-universal-apple-darwin
-            chmod +x smart-coder-ui/src-tauri/binaries/backend-universal-apple-darwin
-          elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
+          # Move and rename the binary to match Tauri's sidecar expectation
+          # Note: Adjust 'target/smart-coder-backend' if your artifact name differs
+          if [ "${{ matrix.platform }}" == "windows-latest" ]; then
             mv target/smart-coder-backend.exe smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
           else
             mv target/smart-coder-backend smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
             chmod +x smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
           fi
+        shell: bash
 
       # 3. Setup Node.js
       - name: setup node
