@@ -1,209 +1,290 @@
 // src/root/RootStore.ts
 
-import { defineStore } from 'pinia';
+import {defineStore} from 'pinia';
 import httpMethods from './http'
 import type HttpStrategy from './HttpStrategy'; // if using strategy types
 
-interface Results<T = any> {
-    success: boolean;
-    message: string;
-    show: boolean;
-    entity: T;
+export interface Results<T = any> {
+  success: boolean;
+  message: string;
+  show: boolean;
+  entity: T;
 }
 
-interface Request<T = any> {
-    path: string;
-    body: T;
-    httpStrategy?: HttpStrategy;
+export interface Request<T = any> {
+  path: string;
+  body: T;
+  httpStrategy?: HttpStrategy;
 }
 
 export const defineRootStore = defineStore('root', {
-    state: () => ({
-        data: {} as Record<string, any>,
-        centralMessage: '' as string,
-        loading: false as boolean,
-        passedInsurance: null as any,
-        dataLoading: false as boolean,
-        path: '' as string,
-        obj: null as any,
-        objLoading: false as boolean,
-        results: null as Results | null,
-        deleteLoading: false as boolean,
-        mode: 0 as number,
-    }),
+  state: () => ({
+    data:[] as any,
+    centralMessage: '' as string,
+    loading: false as boolean,
+    passedInsurance: null as any,
+    dataLoading: false as boolean,
+    path: '' as string,
+    obj: null as any,
+    objLoading: false as boolean,
+    results: null as Results | null,
+    deleteLoading: false as boolean,
+    mode: 0 as number,
+  }),
 
-    actions: {
+  actions: {
 
-        setResults(data: any) {
-            if (data !== null)
-                this.results = {
-                    success: data.success,
-                    message: data.message,
-                    show: data.show,
-                    entity: data.entity,
-                };
-            else this.results = null;
-        },
+    error(error: string) {
+      this.results = {
+        success: false,
+        message: error,
+        show: true,
+        entity: null
+      };
+    },
 
-        strategyResults(response: any, httpStrategy?: HttpStrategy, show = true) {
-            console.log('Response', response);
-            const resultHandler = httpStrategy?.resultHandler;
-            const result = resultHandler ? resultHandler(response) : response.data;
-            result.show = show;
-            this.results = result;
-            return this.results;
-        },
+    setResults(data: any) {
+      if (data !== null)
+        this.results = {
+          success: data.success,
+          message: data.message,
+          show: data.show,
+          entity: data.entity,
+        };
+      else this.results = null;
+    },
 
-        strategyError(error: any, httpStrategy?: HttpStrategy) {
-            console.error('Error occurred!', error);
-            const errorHandler = httpStrategy?.errorHandler;
-            const result = errorHandler
-                ? errorHandler(error)
-                : {
-                    success: false,
-                    message: 'Unknown Error occurred. Please try again later',
-                    show: true,
-                    entity: null,
-                };
-            this.results = result;
-            return result;
-        },
+    strategyResults(response: any, httpStrategy?: HttpStrategy, show = true) {
+      console.log('Response', response);
+      const resultHandler = httpStrategy?.resultHandler;
+      const result = resultHandler ? resultHandler(response) : response.data;
+      result.show = show;
+      this.results = result;
+      console.log("Results ", this.results)
+      return this.results;
+    },
 
-        async post(request: Request, show = true) {
-            this.results = null;
-            console.log('Request', request);
-            this.loading = true;
+    // strategyError(error: any, httpStrategy?: HttpStrategy) {
+    //   console.error('Error occurred!', error);
+    //   const errorHandler = httpStrategy?.errorHandler;
+    //   const result = errorHandler? errorHandler(error) : {
+    //       success: false,
+    //       message: error?.response?.data?.message ?? 'Unknown Error occurred. Please try again later',
+    //       show: true,
+    //       entity: null,
+    //     };
+    //   this.results = result;
+    //   return result;
+    // },
 
-            try {
-                const response = await httpMethods.post(request.path, request.body);
-                return this.strategyResults(response, request.httpStrategy, show);
-            } catch (error: any) {
-                return this.strategyError(error, request.httpStrategy);
-            } finally {
-                this.loading = false;
-            }
-        },
+    strategyError(error: any, httpStrategy?: HttpStrategy) {
+      console.error('Error occurred!', error);
 
-        async put(request: Request) {
-            this.results = null;
-            this.loading = true;
-            setTimeout(() => { }, 2000);
-            console.log("Request", request);
-            let updateResults = await httpMethods
-                .put(request.path, request.body)
-                .then((response) => {
+      // First, try to use custom error handler if provided
+      if (httpStrategy?.errorHandler) {
+        const result = httpStrategy.errorHandler(error);
+        this.results = result;
+        return result;
+      }
 
-                    console.log("Response", response.data);
+      // Extract message safely from backend response
+      let message = 'Unknown Error occurred. Please try again later';
 
-                    return this.strategyResults(response, request.httpStrategy);
+      if (error?.response?.data) {
+        // Your backend sends { message: "..." }
+        if (typeof error.response.data === 'object' && error.response.data.message) {
+          message = error.response.data.message;
+        }
+        // Fallback: sometimes the whole body is a string
+        else if (typeof error.response.data === 'string') {
+          message = error.response.data;
+        }
+      } else if (error?.message) {
+        message = error.message;
+      }
 
-                })
-                .catch((error) => {
-                    return this.strategyError(error, request.httpStrategy);
-                })
-                .finally(() => (this.loading = false));
-            return updateResults;
-        },
+      const result = {
+        success: false,
+        message,
+        show: true,
+        entity: null,
+      };
 
-        async get(url: string) {
-            if (!url) return null;
-            this.objLoading = true;
-            this.obj = null;
-            let data = await httpMethods
-                .get(url)
-                .then((response) => {
-                    this.obj = response.data;
-                    console.log("Returned Data", this.obj);
-                    if (!this.obj) {
-                        this.results = {
-                            success: false,
-                            message: "No data Found",
-                            show: true,
-                        } as Results;
-                    }
-                    return this.obj;
-                })
-                .catch((e) => {
-                    console.log("An error occured " + e);
-                    this.results = {
-                        success: false,
-                        message: "An error occured",
-                        show: true,
-                    } as Results;
-                    return null;
-                })
-                .finally(() => {
-                    this.objLoading = false;
-                });
-            return data;
-        },
+      this.results = result;
+      return result;
+    },
 
-        getData(path: string) {
-            this.results = null;
+    async post(request: Request, show = true) {
+      this.results = null;
+      console.log('Request', request);
+      this.loading = true;
 
-            this.dataLoading = true;
-            httpMethods
-                .get(path)
-                .then((response) => {
-                    this.data = response.data;
-                    console.log("Response", response);
-                    this.results = { success: true, message: "Successful", show: false } as Results;
-                })
-                .catch((error) => {
-                    console.log(error);
-                    this.data = [];
+      try {
+        const response = await httpMethods.post(request.path, request.body);
+        return this.strategyResults(response, request.httpStrategy, show);
+      } catch (error: any) {
+        return this.strategyError(error, request.httpStrategy);
+      } finally {
+        this.loading = false;
+      }
+    },
 
-                    this.results = { success: false, message: error, show: true } as Results;
-                })
-                .finally(() => this.dataLoading = false);
-        },
-        async fetch(endpoint: string, pre: Function, success: Function, end: Function) {
-            if (pre) pre();
+    async put(request: Request) {
+      this.results = null;
+      this.loading = true;
+      setTimeout(() => {
+      }, 2000);
+      console.log("Request", request);
+      let updateResults = await httpMethods
+        .put(request.path, request.body)
+        .then((response) => {
 
-            let res = await httpMethods
-                .get(endpoint)
-                .then((res) => {
-                   console.log(res);
-                    success(res)
-                    return res.data;
-                })
-                .catch((error) => {
-                    console.log("Error loading data", error);
-                    this.results = {
-                        success: false,
-                        message: "Error loading data",
-                        show: true,
-                    } as Results;
+          console.log("Response", response.data);
 
-                    return [];
-                })
-                .finally(() => end());
-            return res;
-        },
+          return this.strategyResults(response, request.httpStrategy);
 
-        async doPost(endpoint: string, payload: any, pre: any, success: any, end: any) {
-            if (pre) pre();
+        })
+        .catch((error) => {
+          return this.strategyError(error, request.httpStrategy);
+        })
+        .finally(() => (this.loading = false));
+      return updateResults;
+    },
 
-            let res = await httpMethods
-                .post(endpoint, payload)
-                .then((res) => {
+    async get(url: string) {
+      if (!url) return null;
+      this.objLoading = true;
+      this.obj = null;
+      let data = await httpMethods
+        .get(url)
+        .then((response) => {
+          this.obj = response.data;
+          console.log("Returned Data", this.obj);
+          if (!this.obj) {
+            this.results = {
+              success: false,
+              message: "No data Found",
+              show: true,
+            } as Results;
+          }
+          return this.obj;
+        })
+        .catch((e) => {
+          console.log("An error occured " + e);
+          this.results = {
+            success: false,
+            message: "An error occured",
+            show: true,
+          } as Results;
+          return null;
+        })
+        .finally(() => {
+          this.objLoading = false;
+        });
+      return data;
+    },
 
-                    success(res)
-                    return res.data;
-                })
-                .catch((error) => {
-                    console.log("Error Posting data", error);
-                    this.results = {
-                        success: false,
-                        message: "Error Posting data",
-                        show: true,
-                    } as Results;
+    async getData(path: string) {
+      this.results = null;
 
-                    return [];
-                })
-                .finally(() => end());
-            return res;
-        },
+      this.dataLoading = true;
+      httpMethods
+        .get(path)
+        .then((response) => {
+          this.data = response.data;
+          console.log("Response", response);
+          this.results = {success: true, message: "Successful", show: false} as Results;
+        })
+        .catch((error) => {
+          console.log(error);
+          this.data = [];
+
+          this.results = {success: false, message: error, show: true} as Results;
+        })
+        .finally(() => this.dataLoading = false);
+    },
+    async fetch(endpoint: string, pre: Function, success: Function, end: Function) {
+      if (pre) pre();
+
+      let res = await httpMethods
+        .get(endpoint)
+        .then((res) => {
+          console.log(res);
+          success(res)
+          return res.data;
+        })
+        .catch((error) => {
+          console.log("Error loading data", error);
+          this.results = {
+            success: false,
+            message: "Error loading data",
+            show: true,
+          } as Results;
+
+          return [];
+        })
+        .finally(() => end());
+      return res;
+    },
+
+    async doPost(endpoint: string, payload: any, pre: any, success: any, end: any) {
+      if (pre) pre();
+
+      let res = await httpMethods
+        .post(endpoint, payload)
+        .then((res) => {
+
+          success(res)
+          return res.data;
+        })
+        .catch((error) => {
+          console.log("Error Posting data", error);
+          this.results = {
+            success: false,
+            message: "Error Posting data",
+            show: true,
+          } as Results;
+
+          return [];
+        })
+        .finally(() => end());
+      return res;
+    },
+
+    async delete(url: string) {
+      if (!url) return null;
+      this.deleteLoading = true;
+      return  await httpMethods
+        .delete(url)
+        .then((response) => {
+          let res = response.data;
+          console.log("Returned Delete Response", res);
+
+            this.results = {
+              success: res.success,
+              message: res.message,
+              show: true,
+            } as Results;
+
+          return this.results;
+        })
+        .catch((e) => {
+          console.log("An error occured " + e);
+          this.results = {
+            success: false,
+            message: "An error occured",
+            show: true,
+          } as Results;
+          return this.results;
+        })
+        .finally(() => {
+          this.deleteLoading = false;
+        });
 
     },
+
+
+  },
 });
+
+export type RootStore = ReturnType<typeof defineRootStore>

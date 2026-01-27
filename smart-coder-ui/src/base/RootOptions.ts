@@ -1,4 +1,4 @@
-interface RootOptions {
+export interface RootOptions {
   maxWidth: number;
   warn: boolean;
   warningMsg: string;

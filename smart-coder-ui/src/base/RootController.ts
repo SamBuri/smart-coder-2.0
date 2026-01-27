@@ -1,148 +1,153 @@
-// src/root/RootController.ts
-import { ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
-// import printPDF from '@/utils/PrintPDF';
-import constants from '@/utils/constants';
-import rootOptions from './RootOptions';
-import type HttpStrategy from './HttpStrategy';
-
-import { defineRootStore } from './RootStore';
-
-// export interface HttpStrategy {
-//   resultHandler?: (response: any) => any;
-//   errorHandler?: (error: any) => any;
-// }
-
-export interface RootModel<TModel> {
-  path: string;
-  rules?: any;
-  model: TModel;
-  httpStrategy?: () => Promise<HttpStrategy | null>;
-}
-
-export interface RootOptions {
-  [key: string]: any;
-}
-
-export interface RootHooks<TModel = any> {
-  afterSave?: (res: any) => void;
-  save?: (model: TModel) => void;
-}
+// src/controllers/base/CrudController.ts
+import { ref, computed, type Ref } from 'vue'
+import { defineRootStore } from '@/base/RootStore'
+import type { RootStore } from '@/base/RootStore'
+import type { Results, Request } from '@/base/RootStore'
+import constants from '@/utils/constants'
+import {open} from "@tauri-apps/plugin-dialog";
 
 export interface BaseModel {
-  clear?: () => void;
-  modify?: () => void;
-  getFormData?: () => any;
-  printOptions?: () => any;
+  id?: string | number
+  clear: () => void
+  copy: (data: any) => void
+  modify?: () => void
+  modifyToUpdate?: () => void
+  getFormData?: () => any
+  printOptions?: () => any
 }
 
-export class RootController<TModel extends BaseModel> {
-  protected path: string;
-  protected rules?: any;
+export interface CrudControllerOptions {
+  showPrintPrompt?: boolean
+  warningMsg?: string
+}
 
-  public model = ref<TModel>();
-  public options = ref<RootOptions>(rootOptions);
-  public props = ref<any>(null);
+export class CrudController<T extends BaseModel> {
+  protected rootStore: RootStore
+  public model: Ref<T>
+  protected path: string
+  protected options: CrudControllerOptions
 
-  private rootStore = defineRootStore();
-
-  public rootState = ref({
+  rootState = ref({
     id: '',
     valid: false,
     idValid: false,
-    idRules: [(v: string) => !!v || 'Please enter the Id'],
+    idRules: [(v: any) => !!v || 'Please enter the Id'],
     buttonText: constants.buttonTexts.save,
     confirmEdit: false,
     showSearch: false,
     confirmDelete: false,
     printData: false,
-  });
+  })
 
-  constructor(
-    protected rawModel: RootModel<TModel>,
-    rawOptions: RootOptions = rootOptions,
-    protected hooks: RootHooks<TModel> = {}
-  ) {
-    this.path = rawModel.path;
-    this.rules = rawModel.rules;
-    this.model.value = rawModel.model;
-    this.options.value = rawOptions;
+  constructor(model: T, path: string, options: CrudControllerOptions = {}) {
+    this.rootStore = defineRootStore()
+    this.model = ref(model) as Ref<T>
+    this.path = path
+    this.options = options
 
-    const route = useRoute();
-    watch(
-      () => route.params,
-      (params) => {
-        const { mode } = params as { mode?: string }; // 👈 FIX HERE
-    // const numMode = Number(mode);
-        // const mode = Number(params.mode);
-        this.rootState.value.showSearch = mode === '1' || mode === '2';
+    // CRITICAL: Bind all methods that use `this` in async contexts
+    this.browseFolder = this.browseFolder.bind(this)
+    // this.isFormValid= this.isFormValid.bind(this)
+    this.save = this.save.bind(this)
+    this.update = this.update.bind(this)
+    this.editClicked = this.editClicked.bind(this)
+    this.editConfirmOk = this.editConfirmOk.bind(this)
 
-        const text =
-          mode === '1'
-            ? constants.buttonTexts.update
-            : mode === '2'
-            ? constants.buttonTexts.print
-            : mode === '3'
-            ? constants.buttonTexts.done
-            : constants.buttonTexts.save;
-
-        this.setButtonText(text);
-      },
-      { immediate: true }
-    );
   }
 
-  public setProps(props: any) {
-    this.props.value = props;
-  }
+  get isSave() { return computed(() => this.rootState.value.buttonText === constants.buttonTexts.save) }
+  get isUpdate() { return computed(() => this.rootState.value.buttonText === constants.buttonTexts.update) }
+  get isPreview() { return computed(() => this.rootState.value.buttonText === constants.buttonTexts.print) }
 
-  public clear(): void {
-    this.model.value?.clear?.();
-  }
+  clear() { this.model.value.clear() }
+  setData(data: any) { this.model.value.copy(data) }
 
-  public setButtonText(text: string): void {
-    this.rootState.value.buttonText = text;
-  }
-
-  protected async getHttpStrategy(): Promise<HttpStrategy | null> {
-    const strategy = this.rawModel.httpStrategy;
-    return strategy ? await strategy() : null;
-  }
-
-  protected body(): any {
-    return this.model.value?.getFormData?.() ?? this.model.value;
-  }
-
-  protected async afterSave(res: any): Promise<void> {
-    this.hooks.afterSave?.(res);
-  }
-
-  // public async print(): Promise<void> {
-  //   const options = this.model.value?.printOptions?.();
-  //   if (options) await printPDF(options);
-  // }
-
-  public async save(): Promise<void> {
-    if (!this.rootState.value.valid) return;
-
-    if (this.hooks.save) {
-      this.hooks.save(this.model.value!);
-      return;
-    }
-
-    this.model.value?.modify?.();
-
-    // const strategy = await this.getHttpStrategy();
-    const res = await this.rootStore.post({
+  saveRequest(){
+    return {
       path: this.path,
-      body: this.body(),
-    });
+      body: this.model.value.getFormData?.() ?? this.model.value,
+    };
+  }
 
-    await this.afterSave(res);
+  isFormValid(){
+   return this.rootState.value.valid;
+  }
 
+  async save() {
+    if (!this.rootState.value.valid) return
+    this.model?.value?.modify?.();
+
+    const res = await this.rootStore.post(this.saveRequest())
     if (res.success) {
-      // if (this.rootState.value.printData) await this.print();
-      this.clear();
+      this.rootState.value.printData && this.print()
+      this.clear()
+    }
+    return res
+  }
+
+  async update() {
+    if (!this.rootState.value.valid || !this.model.value.id) return
+    this.model.value.modify?.()
+    this.model.value.modifyToUpdate?.()
+
+    const req: Request = {
+      path: `${this.path}/${this.model.value.id}`,
+      body: this.model.value.getFormData?.() ?? this.model.value,
+    }
+
+    return await this.rootStore.put(req)
+  }
+
+  async getData(){
+    return this.rootStore.getData(this.path)
+  }
+
+  editClicked() {
+    if (!this.rootState.value.valid) return
+    if (this.rootState.value.buttonText === constants.buttonTexts.print) {
+      this.print()
+    } else {
+      this.rootState.value.confirmEdit = true
     }
   }
+
+  editConfirmOk() {
+    this.isUpdate.value ? this.update() : this.save()
+    this.rootState.value.confirmEdit = false
+  }
+
+  cancelEdit() {
+    this.rootState.value.confirmEdit = false
+  }
+
+  print() {
+    console.log('Print:', this.model.value.printOptions?.())
+  }
+
+  setButtonText(buttonLabel: string){
+    this.rootState.value.buttonText = buttonLabel;
+  }
+
+  // Native method — now safe
+  async browseFolder() {
+    try {
+      // Official Tauri v2 dialog — no custom Rust needed
+      const selected = await open({
+        directory: true,    // Folder only (not file)
+        multiple: false,    // Single selection
+        title: 'Select Project Root Folder',  // Custom title
+      })
+
+      if (selected) {
+        // selected is a string path (or null if cancelled)
+        // this.model.propertyValue.baseFolder = selected as string
+        console.log('Selected folder:', selected)
+      }
+    } catch (err: any) {
+      console.error('Folder selection failed:', err)
+      this.rootStore.error('Failed to select folder: ' + (err.message || 'Unknown error'))
+    }
+  }
+
+  protected async beforeSave(): Promise<boolean> { return true }
 }

@@ -12,6 +12,10 @@ interface ProjectType {
 
 type PasswordRule = (v: string) => string | boolean;
 
+interface SettingProperties{
+  outputFolder: string
+}
+
 const constants = {
   buttonTexts: {
     save: "Save",
@@ -39,7 +43,12 @@ const constants = {
     vue: "Vue",
     javaFx: "JavaFX"
 
-  } as ProjectType
+  } as ProjectType,
+
+  settingProperties: {
+    outputFolder: "DEFAULT_OUT_PUT_FOLDER"
+  } as SettingProperties
+
 };
 
 export default constants;

@@ -8,10 +8,15 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    CrudForm: typeof import('./components/CrudForm.vue')['default']
     HelloWorld: typeof import('./components/HelloWorld.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SConfirmDialog: typeof import('./components/SConfirmDialog.vue')['default']
     SnackBar: typeof import('./components/SnackBar.vue')['default']
+    SSelectField: typeof import('./components/SSelectField.vue')['default']
+    SSelectFolder: typeof import('./components/SSelectFolder.vue')['default']
+    SSingleSelectField: typeof import('./components/SSingleSelectField.vue')['default']
     TextFileReader: typeof import('./components/TextFileReader.vue')['default']
   }
 }

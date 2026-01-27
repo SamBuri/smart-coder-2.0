@@ -1,15 +1,15 @@
 import constants from "@/utils/constants";
 const fieldHeaders = [
-  { key: "fieldName", title: "Field Name", type: "text" },
-  { key: "caption", title: "Caption", type: "text" },
+  { key: "fieldName", title: "Field Name", type: "text", width: '200px' },
+  { key: "caption", title: "Caption", type: "text", width: '200px' },
   {
     key: "dataType", title: "Data Type", type: "select",
     namedValues: ["String", "List", "Set", "Image", "LocalDate", "LocalDateTime",
       "LocalTime", "boolean", "int", "long", "float", "double", "BigDecimal", "File"]
   },
-  { key: "references", title: "References", type: "text" },
+  { key: "references", title: "References", type: "text", width: '200px' },
   {
-    key: "mapping", title: "Mapping", type: "select",
+    key: "mapping", title: "Mapping", type: "select", width: '50px',
     namedValues: ['OneToOne', 'ManyToOne', 'OneToMany', 'ManyToMany'],
     projectType: [constants.projectTypes.javaFx, constants.projectTypes.springBoot],
   },

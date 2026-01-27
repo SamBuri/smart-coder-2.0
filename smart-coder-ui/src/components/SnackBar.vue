@@ -16,7 +16,7 @@
 
 <script setup>
 import { ref, computed, watch, watchEffect, defineEmits} from 'vue'
-import { defineRootStore } from '@/root/RootStore'
+import { defineRootStore } from '@/base/RootStore'
 // defineProps("buttonColor", "timeout")
 const emit = defineEmits(["reset"])
 const snackbar = ref(false);

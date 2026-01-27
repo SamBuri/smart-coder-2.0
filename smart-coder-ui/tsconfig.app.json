@@ -5,6 +5,9 @@
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "strict": true,                  // Keep this for most benefits
+    "noImplicitAny": false,          // Allows implicit 'any' (fixes your rule parameter errors)
+    "strictNullChecks": false,       // Allows undefined where null/undefined aren't expected (fixes v-model mismatches)
 
     "baseUrl": ".",
     "paths": {

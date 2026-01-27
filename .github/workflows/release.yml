@@ -1,0 +1,68 @@
+name: Build and Release
+on:
+  push:
+    branches: [ main ] # Trigger only when you push to main
+
+jobs:
+  build-sidecar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21' # Or your version
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: 'maven'
+
+      - name: Build Native Image
+        run: |
+          ./mvnw -Pnative native:compile
+          # Move it to the Tauri binaries folder with the correct name
+          mkdir -p smart-coder-ui/src-tauri/binaries
+          cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-x86_64-unknown-linux-gnu
+          chmod +x smart-coder-ui/src-tauri/binaries/backend-x86_64-unknown-linux-gnu
+
+      - name: Upload Sidecar Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-binary
+          path: smart-coder-ui/src-tauri/binaries/backend-x86_64-unknown-linux-gnu
+
+  build-tauri:
+    needs: build-sidecar # Wait for Java to finish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Sidecar
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-binary
+          path: smart-coder-ui/src-tauri/binaries
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: 'npm'
+          cache-dependency-path: smart-coder-ui/package-lock.json
+
+      - name: Install Frontend Deps
+        run: cd smart-coder-ui && npm install
+
+      - name: Rust Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: smart-coder-ui/src-tauri -> target
+
+      - name: Build Tauri App
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: smart-coder-ui
+          tagName: v__VERSION__ # Automatically uses version from package.json
+          releaseName: "Smart-Coder v__VERSION__"

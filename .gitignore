@@ -31,3 +31,90 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# ───────────────────────────────────────────────
+#                Tauri-specific
+# ───────────────────────────────────────────────
+**/src-tauri/target/
+**/src-tauri/gen/
+**/src-tauri/Cargo.lock          # ← usually ignored unless you want reproducible builds
+**/src-tauri/bundle/
+**/src-tauri/*.log
+**/src-tauri/build.rs.bak
+
+# Icons & resources that are auto-generated / temporary
+src-tauri/icons/*.ico
+src-tauri/icons/*.png
+src-tauri/icons/icon.icns
+
+# Debug symbols & profiler data (very large)
+src-tauri/target/**/*.pdb
+src-tauri/target/**/*.dSYM
+src-tauri/target/**/*.debug
+
+# Bundler / packager temporary files
+*.deb
+*.rpm
+*.msi
+*.pkg
+*.dmg
+*.AppImage
+tauri.updater.json
+
+# ───────────────────────────────────────────────
+#               Frontend (Vite / npm / yarn / pnpm)
+# ───────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+dist-electron/
+.vercel/
+.output/
+coverage/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log
+.env.local
+.env.*.local
+
+# Editor / OS files
+.DS_Store
+Thumbs.db
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# Optional – only if you don't commit test snapshots / playwright cache
+playwright-report/
+test-results/
+playwright/.cache/
+
+# Optional – if you're using tauri-plugin-updater debug files
+**/updater-signature-*.sig
+**/src-tauri/gen/apple/
+**/src-tauri/gen/android/
+**/node_modules/
+**/dist/
+**/build/
+**/.vite/
+**/.svelte-kit/
+**/.next/
+**/out/
+
+# General OS / editor junk
+**/.DS_Store
+**/.env.local
+**/*.log
+**/Thumbs.db
+**/.idea/
+**/.vscode/
+
+# Optional: if you have sidecars / external binaries
+**/src-tauri/binaries/
+**/src-tauri/bin/
+**/src-tauri/sidecars/
+**/src-tauri/*-*                     # ← catches many triple-suffixed binaries (x86_64-..., aarch64-...) ad

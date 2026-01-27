@@ -6,6 +6,10 @@ export const defineLookupStore = defineStore("lookup", {
     path: "enums/",
     projectTypes: [],
     projectTypesLoading: false,
+    javaProjectTypes: [],
+    javaProjectTypesLoading: false,
+    javaScriptProjectTypes: [],
+    javaScriptProjectTypesLoading: false,
     springBootFiles: [],
     springBootFilesLoading: false,
     mappings: [],
@@ -22,6 +26,8 @@ export const defineLookupStore = defineStore("lookup", {
     vueFilesLoading: false,
     javaFxFiles: [],
     javaFxFilesLoading: false,
+    languages: [],
+    languagesLoading: false,
   }),
 
   actions: {
@@ -35,6 +41,34 @@ export const defineLookupStore = defineStore("lookup", {
         },
         (res: any) => (this.projectTypes = res.data),
         () => (this.projectTypesLoading = false)
+      );
+      return data;
+    },
+
+    async getJavaProjectTypes() {
+      const rootStore = defineRootStore();
+      let data = await rootStore.fetch(
+        `${this.path}javaprojecttypes`,
+        () => {
+          this.javaProjectTypesLoading = true;
+          this.javaProjectTypes = [];
+        },
+        (res: any) => (this.javaProjectTypes = res.data),
+        () => (this.javaProjectTypesLoading = false)
+      );
+      return data;
+    },
+
+    async getJavaScriptProjectTypes() {
+      const rootStore = defineRootStore();
+      let data = await rootStore.fetch(
+        `${this.path}javascriptprojecttypes`,
+        () => {
+          this.javaScriptProjectTypesLoading = true;
+          this.javaScriptProjectTypes = [];
+        },
+        (res: any) => (this.javaScriptProjectTypes = res.data),
+        () => (this.javaScriptProjectTypesLoading = false)
       );
       return data;
     },
@@ -146,6 +180,20 @@ export const defineLookupStore = defineStore("lookup", {
         },
         (res: any) => (this.javaFxFiles = res.data),
         () => (this.javaFxFilesLoading = false)
+      );
+      return data;
+    },
+
+    async getLanguages() {
+      const rootStore = defineRootStore();
+      let data = await rootStore.fetch(
+        `${this.path}languages`,
+        () => {
+          this.languagesLoading = true;
+          this.languages = [];
+        },
+        (res: any) => (this.languages = res.data),
+        () => (this.languagesLoading = false)
       );
       return data;
     },
