@@ -36,32 +36,6 @@
 #          github-token: ${{ secrets.GITHUB_TOKEN }}
 #          cache: 'maven'
 #
-#
-#
-##      # 2. Build the Native Sidecar for the specific OS
-##      - name: Build Native Backend
-##        shell: bash
-##        run: |
-##          ./mvnw -Pnative native:compile
-##
-##          mkdir -p smart-coder-ui/src-tauri/binaries
-##
-##          if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
-##            # For a universal build, Tauri needs both slices to exist
-##            # so it can bundle them into the universal binary.
-##            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-aarch64-apple-darwin
-##            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-x86_64-apple-darwin
-##            cp target/smart-coder-backend smart-coder-ui/src-tauri/binaries/backend-universal-apple-darwin
-##            chmod +x smart-coder-ui/src-tauri/binaries/backend-aarch64-apple-darwin
-##            chmod +x smart-coder-ui/src-tauri/binaries/backend-x86_64-apple-darwin
-##            chmod +x smart-coder-ui/src-tauri/binaries/backend-universal-apple-darwin
-##          elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
-##            mv target/smart-coder-backend.exe smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
-##          else
-##            mv target/smart-coder-backend smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
-##            chmod +x smart-coder-ui/src-tauri/binaries/${{ matrix.sidecar_name }}
-##          fi
-#
 #      # 2. Build the Native Sidecar for the specific OS
 #      - name: Build Native Backend
 #        shell: bash
@@ -98,10 +72,11 @@
 #          cache: 'npm'
 #          cache-dependency-path: smart-coder-ui/package-lock.json
 #
-#      # 4. Install Rust
+#      # 4. Install Rust and required targets for Universal macOS
 #      - name: install Rust stable
 #        uses: dtolnay/rust-toolchain@stable
 #        with:
+#          toolchain: stable
 #          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 #
 #      # 5. Rust Cache
@@ -126,9 +101,11 @@
 #        env:
 #          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 #          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+#          # Enable verbose logging to debug if it fails again
+#          DEBUG: tauri-action
 #        with:
 #          projectPath: smart-coder-ui
-#          tagName: v__VERSION__ # uses version from smart-coder-ui/src-tauri/tauri.conf.json
+#          tagName: v__VERSION__
 #          releaseName: "Smart-Coder v__VERSION__"
 #          releaseDraft: true
 #          prerelease: false

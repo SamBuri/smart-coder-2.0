@@ -14,7 +14,8 @@ jobs:
       matrix:
         include:
           - platform: "macos-latest"
-            args: "--target universal-apple-darwin"
+            # We add a config override here to disable signing explicitly
+            args: "--target universal-apple-darwin --config '{\"bundle\":{\"macOS\":{\"signingIdentity\":null}}}'"
             sidecar_name: "backend-universal-apple-darwin"
           - platform: "ubuntu-22.04"
             args: "--target x86_64-unknown-linux-gnu"
@@ -27,7 +28,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # 1. Setup Java & GraalVM for the specific OS
+      # 1. Setup Java & GraalVM
       - name: Set up GraalVM
         uses: graalvm/setup-graalvm@v1
         with:
@@ -36,22 +37,20 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           cache: 'maven'
 
-      # 2. Build the Native Sidecar for the specific OS
+      # 2. Build the Native Sidecar
       - name: Build Native Backend
         shell: bash
         run: |
           ./mvnw -Pnative native:compile
           
-          # Define the target directory inside src-tauri
           DEST="smart-coder-ui/src-tauri/binaries"
           mkdir -p "$DEST"
           
           if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
-            # Tauri "universal" builds REQUIRE these two specific filenames to exist
+            # Universal builds need architecture-specific suffixes
             cp target/smart-coder-backend "$DEST/backend-aarch64-apple-darwin"
             cp target/smart-coder-backend "$DEST/backend-x86_64-apple-darwin"
-          
-            # Keep this one just in case your tauri.conf.json specifically references it
+            # Fallback for some bundler versions
             cp target/smart-coder-backend "$DEST/backend-universal-apple-darwin"
           
             chmod +x "$DEST/backend-aarch64-apple-darwin"
@@ -72,11 +71,10 @@ jobs:
           cache: 'npm'
           cache-dependency-path: smart-coder-ui/package-lock.json
 
-      # 4. Install Rust and required targets for Universal macOS
+      # 4. Install Rust
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       # 5. Rust Cache
@@ -100,9 +98,6 @@ jobs:
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          # Enable verbose logging to debug if it fails again
-          DEBUG: tauri-action
         with:
           projectPath: smart-coder-ui
           tagName: v__VERSION__
